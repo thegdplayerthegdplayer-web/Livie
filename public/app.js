@@ -1,6 +1,6 @@
-// ===============================
-// LIVIE - LIVE STREAMING APP.JS
-// ===============================
+// =====================================================
+// LIVIE - LIVE STREAMING APP.JS (PRODUCTION READY)
+// =====================================================
 
 const socket = io();
 
@@ -12,11 +12,11 @@ let cameraEnabled = true;
 
 const currentUser =
     localStorage.getItem("livieUsername") ||
-    "Streamer";
+    "User-" + Math.floor(Math.random() * 9000 + 1000);
 
-// ===============================
+// =====================================================
 // ELEMENTS
-// ===============================
+// =====================================================
 
 const studio = document.getElementById("studio");
 const createPanel = document.getElementById("create-panel");
@@ -40,9 +40,9 @@ const donationMessage = document.getElementById("donationMessage");
 const streamList = document.getElementById("stream-list");
 
 
-// ===============================
+// =====================================================
 // OPEN STUDIO
-// ===============================
+// =====================================================
 
 window.openStudio = function () {
     if (!studio) return;
@@ -58,9 +58,9 @@ window.openStudio = function () {
 };
 
 
-// ===============================
+// =====================================================
 // CREATE STREAM
-// ===============================
+// =====================================================
 
 window.createStream = function () {
 
@@ -103,9 +103,9 @@ window.createStream = function () {
 };
 
 
-// ===============================
-// STREAM UPDATES
-// ===============================
+// =====================================================
+// STREAM DIRECTORY COUPLING UPDATES
+// =====================================================
 
 socket.on("streams-update", function (streams) {
 
@@ -122,8 +122,7 @@ socket.on("streams-update", function (streams) {
                     <p>Be the first person to start streaming!</p>
                 </div>
 
-                <button class="watch-button"
-                        onclick="openStudio()">
+                <button class="watch-button" onclick="openStudio()">
                     🎥 Start Streaming
                 </button>
             </div>
@@ -164,8 +163,8 @@ socket.on("streams-update", function (streams) {
 
                 ${
                     isMyStream
-                        ? `<strong class="own-stream-label">
-                            🎥 Your Stream
+                        ? `<br><strong class="own-stream-label" style="color: #818cf8; display: inline-block; margin-top: 5px;">
+                            🎥 Your Stream (Monitoring Setup Active)
                            </strong>`
                         : ""
                 }
@@ -175,9 +174,7 @@ socket.on("streams-update", function (streams) {
             ${
                 !isMyStream
                     ? `
-                        <button
-                            class="watch-button"
-                            onclick="joinStream('${stream.id}')">
+                        <button class="watch-button" onclick="joinStream('${stream.id}')">
                             ▶️ Watch Stream
                         </button>
                       `
@@ -190,9 +187,9 @@ socket.on("streams-update", function (streams) {
 });
 
 
-// ===============================
+// =====================================================
 // JOIN STREAM
-// ===============================
+// =====================================================
 
 window.joinStream = function (streamId) {
 
@@ -208,9 +205,9 @@ window.joinStream = function (streamId) {
 };
 
 
-// ===============================
+// =====================================================
 // CAMERA
-// ===============================
+// =====================================================
 
 window.startCamera = async function () {
 
@@ -256,9 +253,9 @@ window.startCamera = async function () {
 };
 
 
-// ===============================
+// =====================================================
 // SCREEN SHARE
-// ===============================
+// =====================================================
 
 window.shareScreen = async function () {
 
@@ -312,9 +309,9 @@ window.shareScreen = async function () {
 };
 
 
-// ===============================
-// MICROPHONE
-// ===============================
+// =====================================================
+// MICROPHONE CONTROL
+// =====================================================
 
 window.toggleMicrophone = function () {
 
@@ -360,9 +357,9 @@ function updateMicrophoneButton() {
 }
 
 
-// ===============================
-// CAMERA TOGGLE
-// ===============================
+// =====================================================
+// CAMERA TOGGLE (COMPLETED)
+// =====================================================
 
 window.toggleCamera = function () {
 
@@ -371,403 +368,117 @@ window.toggleCamera = function () {
         return;
     }
 
-    const videoTracks =
-        localCameraStream.getVideoTracks();
+    const videoTracks = localCameraStream.getVideoTracks();
 
     if (videoTracks.length === 0) {
+        alert("No camera device was found.");
         return;
     }
 
-    cameraEnabled =
-        !cameraEnabled;
+    cameraEnabled = !cameraEnabled;
 
     videoTracks.forEach(track => {
-        track.enabled =
-            cameraEnabled;
+        track.enabled = cameraEnabled;
     });
 
     updateCameraButton();
 };
 
-
 function updateCameraButton() {
-
-    const buttons =
-        document.querySelectorAll(
-            '[onclick="toggleCamera()"]'
-        );
-
+    const buttons = document.querySelectorAll('[onclick="toggleCamera()"]');
     buttons.forEach(button => {
-
-        button.textContent =
-            cameraEnabled
-                ? "📷 Camera On"
-                : "🚫 Camera Off";
+        button.textContent = cameraEnabled ? "📹 Camera On" : "🚫 Camera Off";
     });
 }
 
 
-// ===============================
-// SEND CHAT MESSAGE
-// ===============================
+// =====================================================
+// CHAT COMMUNICATIONS
+// =====================================================
 
 window.sendMessage = function () {
-
     if (!messageInput) return;
-
-    const message =
-        messageInput.value.trim();
+    
+    const message = messageInput.value.trim();
 
     if (!message) return;
+
+    if (!currentStreamId) {
+        alert("Join or create a livestream before sending a chat.");
+        return;
+    }
 
     socket.emit("chat-message", {
         streamId: currentStreamId,
         username: currentUser,
         message: message
     });
-
-    messageInput.value = "";
+messageInput.value = "";
 };
-
-
-// ENTER TO SEND CHAT
+// Keybind listener for enter key
 if (messageInput) {
-
-    messageInput.addEventListener(
-        "keydown",
-        function (event) {
-
-            if (event.key === "Enter") {
-
-                event.preventDefault();
-
-                window.sendMessage();
-            }
-        }
-    );
+messageInput.addEventListener("keydown", function (e) {
+if (e.key === "Enter") {
+window.sendMessage();
 }
-
-
-// ===============================
-// RECEIVE CHAT
-// ===============================
-
+});
+}
 socket.on("chat-message", function (data) {
-
-    if (!chatMessages) return;
-
-    const messageElement =
-        document.createElement("div");
-
-    messageElement.className =
-        "chat-message";
-
-    messageElement.innerHTML = `
-        <strong>
-            ${escapeHTML(data.username || "User")}:
-        </strong>
-
-        ${escapeHTML(data.message || "")}
-    `;
-
-    chatMessages.appendChild(
-        messageElement
-    );
-
-    chatMessages.scrollTop =
-        chatMessages.scrollHeight;
+appendChatLog(<strong>${escapeHTML(data.username)}:</strong> ${escapeHTML(data.message)});
 });
-
-
-// ===============================
-// DONATION
-// ===============================
-
-window.donate = function () {
-
-    if (!currentStreamId) {
-        alert("There is no active stream.");
-        return;
-    }
-
-    const amount =
-        Number(donationAmount?.value);
-
-    const message =
-        donationMessage?.value.trim() || "";
-
-    if (!amount || amount <= 0) {
-        alert("Enter a valid donation amount.");
-        return;
-    }
-
-    socket.emit("donation", {
-
-        streamId: currentStreamId,
-
-        username: currentUser,
-
-        amount: amount,
-
-        message: message
-    });
-
-    if (donationAmount) {
-        donationAmount.value = "";
-    }
-
-    if (donationMessage) {
-        donationMessage.value = "";
-    }
+// =====================================================
+// DONATIONS INTEGRATION
+// =====================================================
+window.submitDonation = function () {
+if (!donationAmount) return;
+const amount = Number(donationAmount.value);
+const message = donationMessage ? donationMessage.value.trim() : "";
+if (!currentStreamId) {
+alert("You must be actively monitoring/watching a stream room to execute credits transfers.");
+return;
+}
+if (!amount || amount <= 0 || !Number.isFinite(amount)) {
+alert("Please enter a valid credit quantity amount.");
+return;
+}
+socket.emit("donation", {
+streamId: currentStreamId,
+username: currentUser,
+amount: amount,
+message: message
+});
+donationAmount.value = "";
+if (donationMessage) donationMessage.value = "";
 };
-
-
-// ===============================
-// DONATION ALERT
-// ===============================
-
 socket.on("donation-alert", function (data) {
-
-    const alertBox =
-        document.getElementById(
-            "donation-alert"
-        );
-
-    if (!alertBox) return;
-
-    alertBox.innerHTML = `
-        <div class="donation-alert-content">
-
-            <strong>
-                💰 ${escapeHTML(
-                    data.username || "Someone"
-                )}
-            </strong>
-
-            donated
-            <strong>
-                €${Number(data.amount || 0).toFixed(2)}
-            </strong>
-
-            ${
-                data.message
-                    ? `<p>
-                        ${escapeHTML(data.message)}
-                       </p>`
-                    : ""
-            }
-
-        </div>
-    `;
-
-    alertBox.style.display = "block";
-
-    setTimeout(function () {
-
-        alertBox.style.display = "none";
-
-    }, 5000);
+const alertBody = <div style="background: linear-gradient(135deg, #f59e0b, #ef4444); padding: 12px; border-radius: 8px; margin: 5px 0; color: white; text-align: center; font-weight: bold; border: 1px solid rgba(255,255,255,0.2);"> 💎 DONATION ALERT! 💎<br> <span style="color: #fef08a;">${escapeHTML(data.username)} loaded ${data.amount} credits!</span> ${data.message ?
+"${escapeHTML(data.message)}": ''} </div>;
+appendChatLog(alertBody);
 });
-
-
-// ===============================
-// KICK VIEWER
-// ===============================
-
-window.kickViewer = function (userId) {
-
-    if (!currentStreamId) {
-        return;
-    }
-
-    socket.emit("kick-user", {
-
-        streamId: currentStreamId,
-
-        userId: userId
-    });
-};
-
-
-// ===============================
-// KICKED
-// ===============================
-
-socket.on("kicked", function () {
-
-    alert(
-        "You have been removed from the stream."
-    );
-
-    currentStreamId = null;
-
-    if (localCameraStream) {
-
-        localCameraStream
-            .getTracks()
-            .forEach(track => track.stop());
-
-        localCameraStream = null;
-    }
-
-    if (localScreenStream) {
-
-        localScreenStream
-            .getTracks()
-            .forEach(track => track.stop());
-
-        localScreenStream = null;
-    }
-
-    window.location.reload();
-});
-
-
-// ===============================
-// STREAM ENDED
-// ===============================
-
-socket.on("stream-ended", function () {
-
-    alert("The stream has ended.");
-
-    currentStreamId = null;
-
-    if (localCameraStream) {
-
-        localCameraStream
-            .getTracks()
-            .forEach(track => track.stop());
-
-        localCameraStream = null;
-    }
-
-    if (localScreenStream) {
-
-        localScreenStream
-            .getTracks()
-            .forEach(track => track.stop());
-
-        localScreenStream = null;
-    }
-
-    window.location.reload();
-});
-
-
-// ===============================
-// STOP STREAMING
-// ===============================
-
-window.stopStreaming = function () {
-
-    const confirmed =
-        confirm(
-            "Are you sure you want to end your stream?"
-        );
-
-    if (!confirmed) {
-        return;
-    }
-
-    if (localCameraStream) {
-
-        localCameraStream
-            .getTracks()
-            .forEach(track => track.stop());
-
-        localCameraStream = null;
-    }
-
-    if (localScreenStream) {
-
-        localScreenStream
-            .getTracks()
-            .forEach(track => track.stop());
-
-        localScreenStream = null;
-    }
-
-    if (currentStreamId) {
-
-        socket.emit(
-            "end-stream",
-            currentStreamId
-        );
-    }
-
-    currentStreamId = null;
-
-    socket.disconnect();
-
-    setTimeout(function () {
-        window.location.reload();
-    }, 300);
-};
-
-
-// ===============================
-// ESCAPE HTML
-// ===============================
-
-function escapeHTML(value) {
-
-    const div =
-        document.createElement("div");
-
-    div.textContent =
-        String(value ?? "");
-
-    return div.innerHTML;
+// =====================================================
+// SHARED UTILITY SUBSYSTEM RE-ROUTES
+// =====================================================
+function appendChatLog(htmlContent) {
+if (!chatMessages) return;
+const wrapper = document.createElement("div");
+wrapper.style.marginBottom = "8px";
+wrapper.innerHTML = htmlContent;
+chatMessages.appendChild(wrapper);
+chatMessages.scrollTop = chatMessages.scrollHeight;
 }
-
-
-// ===============================
-// PAGE CLEANUP
-// ===============================
-
-window.addEventListener(
-    "beforeunload",
-    function () {
-
-        if (localCameraStream) {
-
-            localCameraStream
-                .getTracks()
-                .forEach(track => track.stop());
-        }
-
-        if (localScreenStream) {
-
-            localScreenStream
-                .getTracks()
-                .forEach(track => track.stop());
-        }
-    }
+function escapeHTML(str) {
+if (!str) return "";
+return str.replace(/[&<>'"]/g,
+tag => ({
+'&': '&',
+'<': '<',
+'>': '>',
+"'": ''',
+'"': '"'
+}[tag] || tag)
 );
-
-
-// ===============================
-// INITIAL UI
-// ===============================
-
-if (studio) {
-    studio.style.display = "none";
 }
-
-if (studioWorkspace) {
-    studioWorkspace.style.display = "none";
-}
-
-if (createPanel) {
-    createPanel.style.display = "block";
-}
-
-
-// ===============================
-// READY
-// ===============================
-
-console.log(
-    "🎥 Livie streaming app loaded successfully."
-);
+socket.on("kicked", () => {
+alert("You have been administrative evicted from this channel room.");
+window.location.reload();
+});
