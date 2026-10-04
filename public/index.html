@@ -4,11 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Livie - Live Streaming</title>
-
+    <title>Livie - Live Streaming Platform Canvas Layout</title>
     <script src="/socket.io/socket.io.js"></script>
-
     <style>
         * {
             box-sizing: border-box;
@@ -25,10 +22,7 @@
             font-family: Arial, Helvetica, sans-serif;
         }
 
-        button,
-        input,
-        textarea,
-        select {
+        button, input, textarea, select {
             font: inherit;
         }
 
@@ -132,7 +126,7 @@
             font-weight: bold;
         }
 
-        #streams {
+        #stream-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 18px;
@@ -144,6 +138,10 @@
             border: 1px solid #1e293b;
             border-radius: 18px;
             transition: 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px;
         }
 
         .stream-card:hover {
@@ -152,45 +150,15 @@
             box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
         }
 
-        .stream-thumbnail {
-            height: 155px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background:
-                linear-gradient(
-                    135deg,
-                    #1e1b4b,
-                    #312e81,
-                    #581c87
-                );
-            font-size: 48px;
-            position: relative;
-        }
-
         .live-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
+            display: inline-block;
             padding: 5px 9px;
             border-radius: 7px;
             background: #e11d48;
             font-size: 10px;
             font-weight: 900;
-        }
-
-        .viewer-badge {
-            position: absolute;
-            right: 10px;
-            bottom: 10px;
-            padding: 5px 8px;
-            border-radius: 7px;
-            background: rgba(0, 0, 0, 0.7);
-            font-size: 11px;
-        }
-
-        .stream-info {
-            padding: 15px;
+            margin-bottom: 10px;
+            width: fit-content;
         }
 
         .stream-info h3 {
@@ -198,26 +166,15 @@
             font-size: 17px;
         }
 
-        .genre {
-            color: #818cf8;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .description {
-            color: #94a3b8;
-            font-size: 13px;
-            min-height: 38px;
-            margin: 10px 0;
-        }
-
         .watch-button {
             width: 100%;
-            padding: 10px;
+            padding: 11px;
             border-radius: 10px;
             background: #4f46e5;
             color: white;
             font-weight: bold;
+            text-align: center;
+            margin-top: 15px;
         }
 
         .watch-button:hover {
@@ -246,9 +203,9 @@
             font-size: 25px;
         }
 
-        .studio-status {
+        #stream-status {
             color: #4ade80;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: bold;
         }
 
@@ -277,9 +234,7 @@
             font-weight: bold;
         }
 
-        input,
-        textarea,
-        select {
+        input, textarea, select {
             width: 100%;
             padding: 11px 13px;
             color: white;
@@ -289,9 +244,7 @@
             outline: none;
         }
 
-        input:focus,
-        textarea:focus,
-        select:focus {
+        input:focus, textarea:focus, select:focus {
             border-color: #6366f1;
         }
 
@@ -314,12 +267,21 @@
 
         #studio-workspace {
             display: none;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-top: 20px;
         }
 
-        .preview-area {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        @media (max-width: 900px) {
+            #studio-workspace {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .video-column {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
         }
 
         .preview-card {
@@ -327,14 +289,17 @@
             border: 1px solid #1e293b;
             border-radius: 17px;
             overflow: hidden;
+            position: relative;
         }
 
         .preview-title {
-            padding: 10px 13px;
+            padding: 10px 14px;
             border-bottom: 1px solid #1e293b;
             color: #94a3b8;
             font-size: 12px;
             font-weight: bold;
+            background: #0f172a;
+            letter-spacing: 0.05em;
         }
 
         video {
@@ -342,630 +307,141 @@
             width: 100%;
             aspect-ratio: 16 / 9;
             background: #000;
-            object-fit: contain;
+            object-fit: cover;
         }
 
-        .preview-empty {
-            aspect-ratio: 16 / 9;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #475569;
-            background: #020617;
-            font-size: 13px;
-        }
-
-        .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 9px;
-            margin-top: 15px;
-        }
-
-        .control-button {
-            padding: 9px 13px;
-            color: #e2e8f0;
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .control-button:hover {
-            background: #334155;
-        }
-
-        .danger {
-            background: #881337;
-            border-color: #9f1239;
-        }
-
-        .danger:hover {
-            background: #be123c;
-        }
-
-        .studio-grid {
-            display: grid;
-            grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr);
-            gap: 20px;
-        }
-
-        .chat-panel {
-            display: flex;
-            flex-direction: column;
-            min-height: 450px;
-            background: #020617;
+        .chat-and-gift-panel {
+            background: #0f172a;
             border: 1px solid #1e293b;
             border-radius: 17px;
+            display: flex;
+            flex-direction: column;
+            height: 580px;
             overflow: hidden;
         }
 
-        .chat-header {
-            padding: 13px 15px;
-            border-bottom: 1px solid #1e293b;
-            font-weight: bold;
-            font-size: 13px;
-        }
-
-        #chat {
+        #chatMessages {
             flex: 1;
-            min-height: 300px;
-            padding: 14px;
+            padding: 16px;
             overflow-y: auto;
-            font-size: 13px;
-        }
-
-        #chat > div {
-            padding: 7px 0;
-            border-bottom: 1px solid #0f172a;
-        }
-
-        .chat-input-area {
-            display: flex;
-            gap: 7px;
-            padding: 10px;
-            border-top: 1px solid #1e293b;
-        }
-
-        .chat-input-area input {
-            flex: 1;
-        }
-
-        .send-button {
-            padding: 10px 15px;
-            border-radius: 10px;
-            color: white;
-            background: #4f46e5;
-            font-weight: bold;
-        }
-
-        .donation-section {
-            margin-top: 15px;
-            padding: 15px;
-            background: #1c1917;
-            border: 1px solid #78350f;
-            border-radius: 14px;
-        }
-
-        .donation-section h3 {
-            margin: 0 0 10px;
-            color: #fbbf24;
-            font-size: 13px;
-        }
-
-        .donation-button {
-            width: 100%;
-            margin-top: 8px;
-            padding: 10px;
-            border-radius: 10px;
-            background: #f59e0b;
-            color: #111827;
-            font-weight: 900;
-        }
-
-        .donation-button:hover {
-            background: #fbbf24;
-        }
-
-        #moderation-panel {
-            display: none;
-            margin-top: 20px;
-            padding: 15px;
-            background: #020617;
-            border: 1px solid #1e293b;
-            border-radius: 15px;
-        }
-
-        #moderation-panel h3 {
-            margin-top: 0;
             font-size: 14px;
-        }
-
-        .viewer-row {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 9px;
-            margin-bottom: 6px;
-            background: #0f172a;
-            border-radius: 9px;
-            font-size: 12px;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        .viewer-actions {
+        .interactive-footer {
+            padding: 16px;
+            border-top: 1px solid #1e293b;
+            background: #020617;
             display: flex;
-            gap: 5px;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .kick-button,
-        .ban-button {
-            padding: 5px 8px;
-            border-radius: 6px;
-            color: white;
-            font-size: 10px;
-            font-weight: bold;
-        }
-
-        .kick-button {
-            background: #d97706;
-        }
-
-        .ban-button {
-            background: #be123c;
-        }
-
-        #donation-alert {
-            position: fixed;
-            top: 90px;
-            left: 50%;
-            transform:
-                translateX(-50%)
-                translateY(-20px)
-                scale(0.9);
-            z-index: 99999;
-            min-width: 300px;
-            max-width: 90%;
-            padding: 20px 30px;
-            text-align: center;
-            background: linear-gradient(135deg, #f59e0b, #ef4444);
-            border: 2px solid white;
-            border-radius: 18px;
-            box-shadow: 0 20px 70px rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            pointer-events: none;
-            transition: 0.3s ease;
-        }
-
-        #donation-alert.show {
-            opacity: 1;
-            transform:
-                translateX(-50%)
-                translateY(0)
-                scale(1);
-        }
-
-        .alert-title {
-            font-size: 12px;
-            font-weight: 900;
-            letter-spacing: 2px;
-        }
-
-        .alert-name {
-            margin-top: 5px;
-            font-size: 23px;
-            font-weight: 900;
-        }
-
-        .alert-message {
-            margin-top: 8px;
-            font-size: 13px;
-            font-style: italic;
-        }
-
-        @media(max-width: 900px) {
-            .studio-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .chat-panel {
-                min-height: 350px;
-            }
-        }
-
-        @media(max-width: 650px) {
-            header {
-                padding: 0 15px;
-            }
-
-            main {
-                width: 92%;
-            }
-
-            .preview-area {
-                grid-template-columns: 1fr;
-            }
-
-            #studio {
-                padding: 15px;
-            }
+        .input-row {
+            display: flex;
+            gap: 8px;
         }
     </style>
 </head>
 
 <body>
 
-<header>
-
-    <div class="logo">
-        <span class="logo-icon">✨</span>
-        <span class="logo-text">Livie</span>
-    </div>
-
-    <div class="header-right">
-        <button
-            class="stream-button"
-            onclick="openStudio()"
-        >
-            🎥 Stream
-        </button>
-    </div>
-
-</header>
-
-<main>
-
-    <section class="hero">
-
-        <h1>
-            Watch Live.
-            <br>
-            Stream Anything.
-        </h1>
-
-        <p>
-            Discover livestreams, chat with creators,
-            and support your favorite streamers.
-        </p>
-
-    </section>
-
-    <section>
+    <header>
+        <div class="logo">
+            <span class="logo-icon">🔮</span>
+            <span class="logo-text">Livie</span>
+        </div>
+        <div class="header-right">
+            <button class="stream-button" onclick="openStudio()">Go Live Studio</button>
+        </div>
+    </header>
+    <main>
+        <div class="hero">
+            <h1>Discover Live Streams</h1>
+            <p>Connect with content creators globally in real time.</p>
+        </div>
 
         <div class="section-title">
-
-            <h2>
-                🔴 Live Now
-            </h2>
-
-            <span class="live-indicator">
-                LIVE STREAMS
-            </span>
-
+            <h2>Active Live Directories</h2>
+            <span class="live-indicator">● LIVE NOW</span>
         </div>
 
-        <div id="streams">
-
-            <div class="stream-card">
-
-                <div class="stream-thumbnail">
-                    📡
-
-                    <span class="live-badge">
-                        LIVE
-                    </span>
-
-                </div>
-
+        <!-- Dynamic Stream Cards Grid -->
+        <div id="stream-list">
+            <div class="stream-card" style="grid-column: 1/-1; text-align: center; padding: 40px 20px;">
                 <div class="stream-info">
+                    <h3>No streams are live right now.</h3>
+                    <p style="color: #64748b;">Be the first person to start streaming!</p>
+                </div>
+                <button class="watch-button" style="width: auto; display: inline-block; padding: 10px 24px;" onclick="openStudio()">🎥 Start Streaming</button>
+            </div>
+        </div>
 
-                    <h3>
-                        No streams yet
-                    </h3>
+        <!-- Creator Studio Workspace -->
+        <div id="studio">
+            <div class="studio-header">
+                <h2>Broadcast Creator Studio</h2>
+                <div id="stream-status">● STANDBY MANAGER</div>
+            </div>
 
-                    <p class="description">
-                        Start the first Livie livestream!
-                    </p>
+            <div id="create-panel">
+                <h3>Launch New Pipeline</h3>
+                <div class="form-group">
+                    <label>Stream Display Title</label>
+                    <input type="text" id="streamName" placeholder="Enter stream title name...">
+                </div>
+                <div class="form-group">
+                    <label>Classification Genre</label>
+                    <input type="text" id="streamGenre" placeholder="e.g. Software Engineering, Gaming">
+                </div>
+                <div class="form-group">
+                    <label>Broadcast Context / Description</label>
+                    <textarea id="streamDescription" placeholder="Tell viewers what your session is about..."></textarea>
+                </div>
+                <button class="primary-button" onclick="createStream()">Initialize Live Feed</button>
+            </div>
 
-                    <button
-                        class="watch-button"
-                        onclick="openStudio()"
-                    >
-                        🎥 Start Streaming
-                    </button>
+            <div id="studio-workspace">
+                <div class="video-column">
+                    <div class="control-bar" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 15px;">
+                        <button class="primary-button" style="background:#059669;" onclick="startCamera()">📹 Enable Camera</button>
+                        <button class="primary-button" style="background:#475569;" onclick="shareScreen()">💻 Share Screen</button>
+                        <button class="primary-button" style="background:#2563eb;" onclick="toggleCamera()">📹 Camera Toggle</button>
+                        <button class="primary-button" style="background:#4b5563;" onclick="toggleMicrophone()">🎤 Mic Toggle</button>
+                    </div>
 
+                    <div class="preview-card">
+                        <div class="preview-title">WEBCAM BROADCAST PREVIEW FEED</div>
+                        <video id="camera" autoplay playsinline muted></video>
+                    </div>
+                    <div class="preview-card">
+                        <div class="preview-title">SCREEN SHARING STREAM OUTPUT</div>
+                        <video id="screen" autoplay playsinline muted></video>
+                    </div>
                 </div>
 
-            </div>
-
-        </div>
-
-    </section>
-
-    <section id="studio">
-
-        <div class="studio-header">
-
-            <h2>
-                🎬 Livie Studio
-            </h2>
-
-            <span
-                class="studio-status"
-                id="studio-status"
-            >
-                ● READY
-            </span>
-
-        </div>
-
-        <div id="create-panel">
-
-            <h3>
-                Create Your Livestream
-            </h3>
-
-            <div class="form-group">
-
-                <label>
-                    STREAM NAME
-                </label>
-
-                <input
-                    id="streamName"
-                    type="text"
-                    maxlength="80"
-                    placeholder="Example: Playing Roblox with friends"
-                >
-
-            </div>
-
-            <div class="form-group">
-
-                <label>
-                    GENRE
-                </label>
-
-                <select id="genre">
-
-                    <option value="">
-                        Select a genre
-                    </option>
-
-                    <option>Gaming</option>
-                    <option>Just Chatting</option>
-                    <option>Music</option>
-                    <option>Art</option>
-                    <option>Coding</option>
-                    <option>Education</option>
-                    <option>Sports</option>
-                    <option>Other</option>
-
-                </select>
-
-            </div>
-
-            <div class="form-group">
-
-                <label>
-                    DESCRIPTION
-                </label>
-
-                <textarea
-                    id="description"
-                    maxlength="300"
-                    placeholder="Tell viewers what your stream is about..."
-                ></textarea>
-
-            </div>
-
-            <button
-                class="primary-button"
-                onclick="createStream()"
-            >
-                🔴 Start Livestream
-            </button>
-
-        </div>
-
-        <div id="studio-workspace">
-
-            <div class="studio-grid">
-
-                <div>
-
-                    <div class="preview-area">
-
-                        <div class="preview-card">
-
-                            <div class="preview-title">
-                                📹 WEBCAM
-                            </div>
-
-                            <video
-                                id="camera"
-                                autoplay
-                                muted
-                                playsinline
-                            ></video>
-
+                <div class="chat-and-gift-panel">
+                    <div class="preview-title">🔴 PIPELINE LIVE CHAT COMMUNICATOR</div>
+                    <div id="chatMessages"></div>
+                    
+                    <div class="interactive-footer">
+                        <div class="input-row">
+                            <input type="text" id="messageInput" placeholder="Type message...">
+                            <button class="primary-button" onclick="sendMessage()">Send</button>
                         </div>
-
-                        <div class="preview-card">
-
-                            <div class="preview-title">
-                                🖥 SCREEN
-                            </div>
-
-                            <video
-                                id="screen"
-                                autoplay
-                                muted
-                                playsinline
-                            ></video>
-
+                        <div class="input-row" style="border-top: 1px solid #1e293b; padding-top: 10px;">
+                            <input type="number" id="donationAmount" placeholder="Credits" style="width: 85px;">
+                            <input type="text" id="donationMessage" placeholder="Gift note (optional)..." style="flex:1;">
+                            <button class="primary-button" style="background:#d97706;" onclick="submitDonation()">💎 Gift</button>
                         </div>
-
                     </div>
-
-                    <div class="controls">
-
-                        <button
-                            class="control-button"
-                            onclick="startCamera()"
-                        >
-                            📹 Enable Camera
-                        </button>
-
-                        <button
-                            class="control-button"
-                            onclick="shareScreen()"
-                        >
-                            🖥 Share Screen
-                        </button>
-
-                        <button
-                            class="control-button"
-                            id="mic-button"
-                            onclick="toggleMicrophone()"
-                        >
-                            🎙 Mic: ON
-                        </button>
-
-                        <button
-                            class="control-button"
-                            id="camera-button"
-                            onclick="toggleCamera()"
-                        >
-                            📹 Camera: ON
-                        </button>
-
-                        <button
-                            class="control-button danger"
-                            onclick="stopStreaming()"
-                        >
-                            ⏹ End Stream
-                        </button>
-
-                    </div>
-
-                    <div id="moderation-panel">
-
-                        <h3>
-                            👥 Viewer Management
-                        </h3>
-
-                        <div id="viewer-list">
-
-                            <div class="viewer-row">
-
-                                <span>
-                                    No viewers yet
-                                </span>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
                 </div>
-
-                <div class="chat-panel">
-
-                    <div class="chat-header">
-                        💬 Live Chat
-                    </div>
-
-                    <div id="chat">
-
-                        <div>
-                            <strong>SYSTEM:</strong>
-                            Welcome to Livie!
-                        </div>
-
-                    </div>
-
-                    <div class="chat-input-area">
-
-                        <input
-                            id="message"
-                            type="text"
-                            maxlength="300"
-                            placeholder="Send a message..."
-                        >
-
-                        <button
-                            class="send-button"
-                            onclick="sendMessage()"
-                        >
-                            Send
-                        </button>
-
-                    </div>
-
-                    <div class="donation-section">
-
-                        <h3>
-                            💸 Support this streamer
-                        </h3>
-
-                        <input
-                            id="donationAmount"
-                            type="number"
-                            min="1"
-                            max="1000000"
-                            placeholder="Amount of CR"
-                        >
-
-                        <input
-                            id="donationMessage"
-                            type="text"
-                            maxlength="150"
-                            placeholder="Donation message..."
-                            style="margin-top:7px;"
-                        >
-
-                        <button
-                            class="donation-button"
-                            onclick="donate()"
-                        >
-                            💰 Donate
-                        </button>
-
-                    </div>
-
-                </div>
-
             </div>
-
         </div>
+    </main>
 
-    </section>
-
-</main>
-
-<div id="donation-alert">
-
-    <div class="alert-title">
-        🎉 NEW DONATION
-    </div>
-
-    <div
-        class="alert-name"
-        id="donation-alert-name"
-    >
-        User donated 0 CR
-    </div>
-
-    <div
-        class="alert-message"
-        id="donation-alert-message"
-    ></div>
-
-</div>
-
-<script src="app.js"></script>
-
+    <script src="app.js"></script>
 </body>
 </html>
